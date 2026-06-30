@@ -1,2 +1,2 @@
-// `props` is a function so it runs per-request — RSC props can depend on `url`.
-export const props = (_url: string) => ({ name: "world" });
+export const props = { title: "VPRS", tagline: "React Server Components, minimal by design." } as const;
+export type Props = typeof props;

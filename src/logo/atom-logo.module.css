@@ -1,0 +1,340 @@
+/**
+ * Fake-3D atom: viewer-fixed light, perspective depth, billboarded electron balls.
+ * Scale with --size on the root `.atom` element.
+ */
+.atom {
+  --size: 72px;
+  --spin-duration: 8s;
+  --arc-stroke: 3px;
+  --arc-span: 32deg;
+  --electron-size: calc(var(--size) * 0.1);
+  --nucleus-size: calc(var(--size) * 0.28);
+  --orbit-radius: calc(var(--size) * 0.5);
+  --indigo: #6366f1;
+  --violet: #8b5cf6;
+  --glow: rgba(129, 140, 248, 0.45);
+  --tilt: 14deg;
+  --light-x: 30%;
+  --light-y: 24%;
+  --shade-x: 70%;
+  --shade-y: 76%;
+  --depth-front: 1.22;
+  --depth-back: 0.76;
+  --depth-front-opacity: 1;
+  --depth-back-opacity: 0.62;
+  --path-direction: normal;
+  --path-duration: 4s;
+  --depth-animation: vprs-depth;
+
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  perspective: calc(var(--size) * 1.65);
+  perspective-origin: 50% 50%;
+  color: var(--indigo);
+}
+
+.scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt));
+}
+
+/* Equatorial ring — shares tilt but not scene Y spin, so depth tracks path angle. */
+.equator {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt));
+}
+
+.nucleus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--nucleus-size);
+  height: var(--nucleus-size);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateZ(calc(var(--size) * -0.08));
+  transform-style: preserve-3d;
+  background: radial-gradient(
+    circle at var(--light-x) var(--light-y),
+    #f5f3ff 0%,
+    #c4b5fd 22%,
+    var(--violet) 58%,
+    #5b21b6 88%,
+    #3b0764 100%
+  );
+  box-shadow:
+    calc(var(--size) * 0.03) calc(var(--size) * 0.05) calc(var(--size) * 0.1) rgba(59, 7, 100, 0.5),
+    0 0 calc(var(--size) * 0.12) var(--glow);
+}
+
+.nucleus::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at var(--shade-x) var(--shade-y),
+    transparent 40%,
+    rgba(46, 16, 101, 0.55) 100%
+  );
+}
+
+.nucleus::after {
+  content: "";
+  position: absolute;
+  top: 15%;
+  left: 19%;
+  width: 30%;
+  height: 24%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 72%);
+}
+
+.orbit {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: var(--orbit-transform);
+}
+
+.trace {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  /* Forward path — short tail lagging CCW of electron at 12 o'clock. */
+  background: conic-gradient(
+    from calc(-1 * var(--arc-span)),
+    transparent 0deg,
+    transparent calc(var(--arc-span) * 0.38),
+    color-mix(in srgb, currentColor 18%, transparent) calc(var(--arc-span) * 0.58),
+    color-mix(in srgb, currentColor 52%, transparent) calc(var(--arc-span) * 0.78),
+    color-mix(in srgb, currentColor 85%, transparent) calc(var(--arc-span) * 0.92),
+    currentColor var(--arc-span),
+    transparent var(--arc-span),
+    transparent 360deg
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--arc-stroke) - 0.5px),
+    #000 calc(100% - var(--arc-stroke)),
+    #000 calc(100% - 0.5px),
+    transparent 100%
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--arc-stroke) - 0.5px),
+    #000 calc(100% - var(--arc-stroke)),
+    #000 calc(100% - 0.5px),
+    transparent 100%
+  );
+}
+
+/* Reverse path — mirrored stops, same length and fade. */
+.traceAlt {
+  background: conic-gradient(
+    from 0deg,
+    currentColor 0deg,
+    color-mix(in srgb, currentColor 85%, transparent) calc(var(--arc-span) * 0.08),
+    color-mix(in srgb, currentColor 52%, transparent) calc(var(--arc-span) * 0.22),
+    color-mix(in srgb, currentColor 18%, transparent) calc(var(--arc-span) * 0.42),
+    transparent calc(var(--arc-span) * 0.62),
+    transparent var(--arc-span),
+    transparent 360deg
+  );
+}
+
+.path {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.electron {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: var(--electron-size);
+  height: var(--electron-size);
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) translateY(calc(-1 * var(--orbit-radius)));
+}
+
+.counterPath,
+.counterOrbit,
+.counterSpinnerBillboard,
+.counterSpinnerFace {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.counterOrbit {
+  transform: var(--counter-orbit-transform);
+}
+
+/* Face-on toward viewer — tilt cancel only for the non-spinning equator. */
+.counterSpinnerFace,
+.counterSpinnerBillboard {
+  transform: rotateY(0deg) rotateX(calc(-1 * var(--tilt)));
+}
+
+.electronBall {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at var(--light-x) var(--light-y),
+    #ffffff 0%,
+    #e0e7ff 28%,
+    #a5b4fc 62%,
+    #6366f1 100%
+  );
+  box-shadow:
+    calc(var(--electron-size) * 0.1) calc(var(--electron-size) * 0.16) calc(var(--electron-size) * 0.28)
+      rgba(79, 70, 229, 0.45);
+}
+
+.electronBall::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at var(--shade-x) var(--shade-y),
+    transparent 36%,
+    rgba(67, 56, 202, 0.48) 100%
+  );
+}
+
+.electronBall::after {
+  content: "";
+  position: absolute;
+  top: 15%;
+  left: 19%;
+  width: 30%;
+  height: 24%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 72%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spinner {
+    animation: vprs-spin var(--spin-duration) linear infinite;
+  }
+
+  .orbit .path {
+    animation: vprs-path var(--path-duration) linear infinite;
+    animation-direction: var(--path-direction);
+  }
+
+  .orbit .counterPath {
+    animation: vprs-counter-path var(--path-duration) linear infinite;
+    animation-direction: var(--path-direction);
+  }
+
+  .orbit .electronBall {
+    animation-name: var(--depth-animation);
+    animation-duration: var(--path-duration);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: var(--path-direction);
+  }
+
+  .spinner .counterSpinnerBillboard {
+    animation: vprs-counter-spin var(--spin-duration) linear infinite;
+  }
+}
+
+@keyframes vprs-spin {
+  from {
+    transform: rotateX(var(--tilt)) rotateY(0deg);
+  }
+
+  to {
+    transform: rotateX(var(--tilt)) rotateY(360deg);
+  }
+}
+
+@keyframes vprs-path {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+@keyframes vprs-counter-path {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(-360deg);
+  }
+}
+
+@keyframes vprs-counter-spin {
+  from {
+    transform: rotateY(0deg) rotateX(calc(-1 * var(--tilt)));
+  }
+
+  to {
+    transform: rotateY(-360deg) rotateX(calc(-1 * var(--tilt)));
+  }
+}
+
+/* Depth cues — brightness/opacity only so the ball stays on the ring stroke. */
+@keyframes vprs-depth {
+  0%,
+  50%,
+  100% {
+    opacity: 0.88;
+    filter: brightness(0.95);
+  }
+
+  25% {
+    opacity: var(--depth-front-opacity);
+    filter: brightness(1.1);
+  }
+
+  75% {
+    opacity: var(--depth-back-opacity);
+    filter: brightness(0.8);
+  }
+}
+
+@keyframes vprs-depth-equator {
+  0%,
+  100% {
+    opacity: var(--depth-back-opacity);
+    filter: brightness(0.8);
+  }
+
+  25%,
+  75% {
+    opacity: 0.88;
+    filter: brightness(0.95);
+  }
+
+  50% {
+    opacity: var(--depth-front-opacity);
+    filter: brightness(1.1);
+  }
+}
