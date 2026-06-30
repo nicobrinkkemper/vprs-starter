@@ -31,6 +31,12 @@ npm run preview  # serve the built dist/static locally
 
 So a connected Vercel project (or `vercel` / `vercel --prod` from the CLI) builds the app and serves `dist/static` from the CDN. Nothing else to configure for the static step.
 
+## Edge showcase
+
+The static page carries one live touch: a small badge that asks a **Vercel Edge Function** (`api/edge.ts`) where it's being served from, and shows the edge region plus your approximate location. It runs on Vercel's edge runtime at request time, so it only lights up on the deployed site — locally and on the plain static CDN there's no function, and the badge says so.
+
+Nothing to configure: Vercel picks up anything under `api/` automatically, and the static page fetches `/api/edge` from the browser. It's deliberately decoupled from the page render (the page stays static and fast); when vprs ships its `/edge` RSC handler, the same data can move into a server-rendered `dynamic` route (step 2 below).
+
 ## Roadmap (step 2: the Vercel adapter)
 
 The dynamic path will follow the standard "Node server on Vercel" shape — vprs's `toNodeListener(handler)` is already a `(req, res)` Node function, so it maps onto a Vercel Node function directly:

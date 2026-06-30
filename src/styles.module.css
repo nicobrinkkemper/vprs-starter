@@ -48,6 +48,26 @@
   color: var(--muted);
 }
 
+.edge {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  background: rgba(129, 140, 248, 0.08);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.edge[data-state="offline"] {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: transparent;
+  color: var(--muted);
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;
