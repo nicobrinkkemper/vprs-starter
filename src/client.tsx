@@ -1,3 +1,4 @@
+import "./globals.css";
 import { use, useCallback, useState, useTransition } from "react";
 import { createRoot } from "react-dom/client";
 import { createReactFetcher } from "vite-plugin-react-server/utils";

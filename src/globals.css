@@ -1,0 +1,19 @@
+/* Global reset + page backdrop. Imported from client.tsx (not index.html): the
+   static build regenerates <head> and drops anything authored in index.html, so
+   a client-entry import is what reliably lands as a <head> stylesheet link. */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99, 102, 241, 0.14), transparent),
+    #07070d;
+  color: #f1f5f9;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
