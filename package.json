@@ -7,7 +7,9 @@
     "dev": "vite",
     "dev:rsc": "NODE_OPTIONS='--conditions=react-server' vite",
     "build": "vite build --app",
-    "preview": "vite preview --outDir dist/static"
+    "preview": "vite preview --outDir dist/static",
+    "build:vercel": "vite build --app && node scripts/prepare-vercel.mjs",
+    "edge": "npm run build && node edge-server.mjs"
   },
   "dependencies": {
     "react": "^19.2.7",

@@ -1,6 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "vite build --app",
-  "outputDirectory": "dist/static"
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist/static",
+  "functions": {
+    "api/render.ts": {
+      "includeFiles": "dist/**"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/render?path=/$1" }]
 }

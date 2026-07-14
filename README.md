@@ -1,61 +1,59 @@
 # vprs-starter
 
-A minimal [`vite-plugin-react-server`](https://github.com/nicobrinkkemper/vite-plugin-react-server) app set up to deploy on **Vercel**, growing into a Supabase-backed CMS. Built small on purpose — one static page now, live routes next.
+A minimal [`vite-plugin-react-server`](https://github.com/nicobrinkkemper/vite-plugin-react-server) app deployed on **Vercel**, growing into a Supabase-backed CMS. Built small on purpose.
+
+Two file-based routes (`/` and `/about`), a one-call client entry, and every route rendered on the server at request time.
 
 ## Status
 
-- **Step 1 (now): static deploy.** Routes in `build.pages` prerender to `dist/static`, served by Vercel's CDN. No server function, no `--conditions`, no moving parts. `edge: false` in `vite.config.ts`.
-- **Step 2 (next): live routes.** Flip `edge` back on (it's the default) and add a Vercel **Node serverless function** (`api/`) running `createEdgeRequestHandler` for routes marked `dynamic`. Needs vite-plugin-react-server with the `/edge` export (≥ the release after 2.10.0).
-- **Step 3: CMS.** A `dynamic` route reads content from Supabase and renders it flash-free per request.
+- **Step 1 (done): static deploy.** Routes prerender to `dist/static` and hydrate in place — each page's initial flight is inlined into its HTML, so there's no `/index.rsc` round-trip on first paint.
+- **Step 2 (done): server-rendered routes.** A Vercel Node function renders each route per request out of the single-isolate bundle, so a route's loader can read the live request. That's what the geo badge on the home page shows.
+- **Step 3 (next): CMS.** A route reads content from Supabase and renders it per request.
 
 ## Develop
 
 ```bash
 npm install
 npm run dev      # vite dev server
-npm run build    # → dist/static (+ dist/client, dist/server)
-npm run preview  # serve the built dist/static locally
+npm run build    # → dist/static (+ dist/client, dist/server, dist/server-edge)
+npm run preview  # serve the prerendered dist/static
+npm run edge     # build, then render every route per request on :4401
 ```
 
-## Deploy to Vercel (step 1, static)
+`npm run preview` shows the **static** path (prerendered HTML, geo badge idle). `npm run edge` shows the **dynamic** path — the same code Vercel runs, with the geo headers Vercel would set simulated locally.
 
-`vercel.json` already points Vercel at the right build:
+## Routing
 
-```json
-{
-  "framework": null,
-  "buildCommand": "vite build --app",
-  "outputDirectory": "dist/static"
-}
+`fileRouter("src/routes")` scans `src/routes/**` for a `page.tsx` and its sibling `props.ts`, and hands the plugin the pages, props and route patterns. Adding a route means adding a folder.
+
+A route's `props.ts` is its loader, and **it runs wherever the route renders**. Prerendered at build time there is no request, so it takes the static path; rendered per request it receives the `Request` and can read headers, cookies or a database.
+
+## The client entry
+
+`src/client.tsx` is the whole thing:
+
+```tsx
+startClient({
+  moduleBaseURL: import.meta.env.BASE_URL,
+  publicOrigin: import.meta.env.PUBLIC_ORIGIN,
+});
 ```
 
-So a connected Vercel project (or `vercel` / `vercel --prod` from the CLI) builds the app and serves `dist/static` from the CDN. Nothing else to configure for the static step.
+`startClient` assembles the router, hydration, client-side navigation and RSC HMR. Pass `moduleBaseURL` and `publicOrigin` — they are not inferred, and without them the client ships un-prefixed module URLs that 404 under a deploy base. The plugin defines both at build time from `VITE_BASE_URL` / `VITE_PUBLIC_ORIGIN` (note the `VITE_` prefix: the unprefixed names are not read).
 
-## Edge showcase
+## The geo badge
 
-The static page carries one live touch: a small badge that asks a **Vercel Edge Function** (`api/edge.ts`) where it's being served from, and shows the edge region plus your approximate location. It runs on Vercel's edge runtime at request time, so it only lights up on the deployed site — locally and on the plain static CDN there's no function, and the badge says so.
+The home page shows where it was rendered. It is a plain **server** component with no `"use client"` and no fetch: the loader reads Vercel's `x-vercel-ip-*` headers off the request during the render, so the answer is in the server HTML on first paint. Prerendered, there is no request, and the badge says so instead.
 
-Nothing to configure: Vercel picks up anything under `api/` automatically, and the static page fetches `/api/edge` from the browser. It's deliberately decoupled from the page render (the page stays static and fast); when vprs ships its `/edge` RSC handler, the same data can move into a server-rendered `dynamic` route (step 2 below).
+That is the point of the demo — the same route is static or live depending only on where it renders.
 
-## Roadmap (step 2: the Vercel adapter)
+## How the Vercel deploy works
 
-The dynamic path will follow the standard "Node server on Vercel" shape — vprs's `toNodeListener(handler)` is already a `(req, res)` Node function, so it maps onto a Vercel Node function directly:
+`vercel.json` builds with `npm run build:vercel` and serves `dist/static`, with every non-asset request rewritten to `api/render.ts`.
 
-```jsonc
-// vercel.json (step 2 sketch)
-{
-  "functions": { "api/index.ts": { "includeFiles": "dist/**" } },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
-}
-```
+Two things are worth knowing:
 
-```ts
-// api/index.ts (step 2 sketch)
-import { createEdgeRequestHandler } from "vite-plugin-react-server/edge";
-import { toNodeListener } from "vite-plugin-react-server/request-handler";
+- **Vercel serves a matching static file before it applies a rewrite.** The prerendered `index.html` would therefore answer `/` and the render function would never run — the deploy would look static and the badge would stay dark. So `scripts/prepare-vercel.mjs` drops the prerendered page HTML from the dynamic deploy, and the client chunks, CSS and manifests stay. `npm run build` still emits that HTML for `npm run preview` and for a plain CDN deploy.
+- **It's a Node function, not an edge-runtime one.** `build.edge` bakes a *single-isolate* bundle (`dist/server-edge/render.js`): one isolate, no `worker_threads`, no runtime `--conditions`. It still reads the server manifest off disk, and Vercel's edge runtime has no filesystem. Vercel sets the geo headers on both runtimes, so nothing about the demo depends on the distinction.
 
-const ready = createEdgeRequestHandler({ buildDir: "dist", dynamic: ["/cms"] }).then(toNodeListener);
-export default async (req, res) => (await ready)(req, res);
-```
-
-Node runtime (`nodejs22.x`) with `supportsResponseStreaming` for vprs's streaming HTML. A proper `.vercel/output` Build Output API adapter (CDN static + function, like SvelteKit/Astro) is the grown-up version of this, for later.
+`api/render.ts` and `edge-server.mjs` both call the same handler (`server/handler.mjs`), so what runs locally is what runs in production.

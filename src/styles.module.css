@@ -89,3 +89,41 @@
 .link:hover {
   color: var(--accent);
 }
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1rem 0;
+}
+
+.navLink {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+}
+
+.navLink:hover,
+.navLink[data-active="true"] {
+  color: var(--accent);
+}
+
+.prose {
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.prose code {
+  color: var(--accent);
+  background: rgba(129, 140, 248, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
