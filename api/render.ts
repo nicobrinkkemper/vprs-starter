@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
-// @ts-expect-error - plain ESM, shared with edge-server.mjs (no types needed)
 import { handler } from "../server/handler.mjs";
 
 // Vercel Node function. `vercel.json` rewrites every non-asset request here, so

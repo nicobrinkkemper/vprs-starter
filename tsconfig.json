@@ -7,7 +7,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["vite/client", "vite-plugin-react-server/virtual"]
+    "types": ["node", "vite/client", "vite-plugin-react-server/virtual"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "api", "vite.config.ts"]
 }
