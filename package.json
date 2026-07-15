@@ -9,7 +9,7 @@
     "build": "vite build --app && node scripts/emit-client-entry.mjs",
     "preview": "vite preview --outDir dist/static",
     "build:vercel": "npm run build && node scripts/prepare-vercel.mjs",
-    "edge": "npm run build && node edge-server.mjs",
+    "edge": "npm run build:vercel && node edge-server.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

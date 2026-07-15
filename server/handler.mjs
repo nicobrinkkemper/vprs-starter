@@ -28,11 +28,44 @@ import { clientEntry } from "../dist/client-entry.mjs";
 // task root in the Vercel function.
 const moduleDir = join(process.cwd(), "dist", "client");
 
-/** A Web fetch handler: (Request) => Promise<Response>. */
-export const handler = createEdgeHandler({
+/** Serves the full flash-free HTML document for a route. */
+const documentHandler = createEdgeHandler({
   // The document producer bakes the built stylesheets into its default
   // globalCss, so the render comes out styled with no CSS wiring here.
   renderDocument: renderRouteToDocument,
   moduleBaseURL: pathToFileURL(moduleDir).href + "/",
   bootstrapModules: clientEntry ? ["/" + clientEntry] : [],
 });
+
+// The client router fetches a route's flight at "<route>/index.rsc" for
+// client-side navigation (the same path the static build used to prerender). On
+// this per-request deploy those snapshots are dropped (see prepare-vercel), so
+// serve the flight live from the same producer instead — the `headless`
+// (Root-only) payload the document render also inlines, byte-compatible with what
+// the client already consumes on first paint. Navigation then reads the visitor's
+// geo per request too, not a frozen build-time value.
+const FLIGHT_SUFFIX = "/index.rsc";
+const UNKNOWN_ROUTE_MARKER = "[edge] unknown route:";
+
+/** A Web fetch handler: (Request) => Promise<Response>. */
+export async function handler(request) {
+  const { pathname } = new URL(request.url);
+  if (!pathname.endsWith(FLIGHT_SUFFIX)) return documentHandler(request);
+
+  const route = pathname.slice(0, -FLIGHT_SUFFIX.length) || "/";
+  try {
+    const { headless } = await renderRouteToDocument(route, { request });
+    return new Response(headless, {
+      headers: { "content-type": "text/x-component; charset=utf-8" },
+    });
+  } catch (error) {
+    // The producer 404s an unbaked route by throwing the unknown-route marker.
+    if (error instanceof Error && error.message.includes(UNKNOWN_ROUTE_MARKER)) {
+      return new Response("Not Found", {
+        status: 404,
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
+    }
+    throw error;
+  }
+}
