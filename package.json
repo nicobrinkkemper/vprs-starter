@@ -15,13 +15,13 @@
   "dependencies": {
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "vite-plugin-react-server": "^3.1.6"
+    "vite-plugin-react-server": "^3.1.7"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
     "@types/react": "^19.0.9",
     "@types/react-dom": "^19.0.3",
     "typescript": "^5.7.3",
-    "vite": "^6.4.1"
+    "vite": "^8.1.4"
   }
 }

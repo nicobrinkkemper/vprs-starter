@@ -18,7 +18,15 @@ import { createServer } from "node:http";
 import { Readable } from "node:stream";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, extname, normalize, resolve } from "node:path";
-import { handler } from "./server/handler.mjs";
+
+// This stands in for the Vercel function, which runs in production — so React
+// must resolve to its production build here too. React reads NODE_ENV when it is
+// first imported, so set it BEFORE the handler is loaded; that is why the import
+// below is dynamic. Without this the local runner uses React's dev build and
+// logs keyless-list warnings on the flight-reconstructed tree that never occur
+// on the real deploy.
+process.env.NODE_ENV ??= "production";
+const { handler } = await import("./server/handler.mjs");
 
 const browserDir = resolve("dist", "static");
 
