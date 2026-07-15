@@ -8,5 +8,13 @@
       "includeFiles": "dist/**"
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/render?path=/$1" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/render?path=/$1" }],
+  "headers": [
+    {
+      "source": "/(.*)\\.rsc",
+      "headers": [
+        { "key": "Content-Type", "value": "text/x-component; charset=utf-8" }
+      ]
+    }
+  ]
 }
