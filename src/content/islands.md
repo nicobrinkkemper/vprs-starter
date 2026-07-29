@@ -17,7 +17,9 @@ read files, secrets, and request headers directly.
   pair. The pointer also drives the page's light: the island writes
   `--vprs-*` CSS variables on `<html>` and every surface shades itself from
   them.
-- that's it. The hero, the badge, these guides: all server components.
+- **every `Link`**: the router's navigation island — it intercepts internal
+  clicks and fetches the next route's flight instead of reloading the page.
+- that's it. The hero copy, the badge, these guides: all server components.
 
 ## Rule of thumb
 

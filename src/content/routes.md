@@ -10,6 +10,8 @@ Point the plugin at a directory and the file tree **is** the URL tree. Under
 | `props.ts` | this segment's loader; its return value is the page's props |
 
 A `props` export can also live in `page.tsx`, which is what this starter does.
+The router knows more filenames (`error.tsx`, `loading.tsx`, `head.ts`, …) —
+see the [routing docs](https://github.com/nicobrinkkemper/vite-plugin-react-server/blob/main/docs/routing.md).
 
 ## The map of this app
 
@@ -18,9 +20,10 @@ src/routes/
 ├── route.tsx          layout: the shared surface + footer
 ├── page.tsx           /            the hero (loader reads request headers)
 └── docs/
-    ├── page.tsx       /docs        lists the guides (loader reads a folder)
+    ├── route.tsx      layout: the docs header, nested in the root layout
+    ├── page.tsx       /docs        lists the guides (from a glob of src/content/)
     └── $slug/
-        └── page.tsx   /docs/…      one guide (loader reads a file)
+        └── page.tsx   /docs/…      one guide (picked from the same glob)
 ```
 
 ## Dynamic params

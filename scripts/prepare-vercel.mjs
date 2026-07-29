@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 
 // Vercel answers a route from dist/static while its prerendered files exist;
 // dropping BOTH halves makes the route fall through the rewrite and render
-// per request. Mechanism and traps: README "How the Vercel deploy works".
+// per request. Mechanism and traps: README "The Vercel deploy".
 
 const staticDir = resolve("dist", "static");
 

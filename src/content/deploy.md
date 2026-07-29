@@ -3,7 +3,7 @@
 ```
 npm run dev            # develop with HMR
 npm run build          # prerendered snapshots + server bundle for every route
-npm run edge           # serve the built output locally, rendering per request
+npm run edge           # rebuild, then render every route per request locally
 ```
 
 One `npm run build` gives every route two forms: a prerendered snapshot in
@@ -26,5 +26,6 @@ Want the same setup? Use their deploy link with this repo:
 [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnicobrinkkemper%2Fvprs-starter)
 
 Prefer somewhere else? Delete `api/`, `vercel.json`, and
-`scripts/prepare-vercel.mjs`; the plain `npm run build` output has no Vercel
+`scripts/prepare-vercel.mjs`, and switch the `edge` script from
+`build:vercel` to `build` — the plain `npm run build` output has no Vercel
 in it at all.

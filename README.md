@@ -4,7 +4,7 @@ A minimal [`vite-plugin-react-server`](https://github.com/nicobrinkkemper/vite-p
 
 File-based routes, a one-call client entry, an interactive hero island (the atom follows the pointer and is the page's light source), and a per-route choice between CDN snapshots and per-request rendering. The `/docs` guides are markdown in `src/content/`, rendered by the server.
 
-The hosted demo runs on Vercel (not affiliated, just where the demo lives). The build is host-agnostic; the Vercel-specific files are `api/`, `vercel.json`, and `scripts/prepare-vercel.mjs`, all deletable.
+The hosted demo runs on Vercel (not affiliated, just where the demo lives). The build is host-agnostic; the Vercel-specific files are `api/`, `vercel.json`, and `scripts/prepare-vercel.mjs`, all deletable (retarget the `edge` script from `build:vercel` to plain `build` if you delete them).
 
 ## One build, three ways to serve it
 
