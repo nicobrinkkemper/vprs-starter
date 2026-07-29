@@ -1,0 +1,138 @@
+/* Hero lockup: raised slab, debossed "vprs", atom floating in front, all lit
+   by --vprs-light-x/y. Self-contained: deleting src/logo removes the whole
+   composition — nothing here is referenced by the page styles. */
+.lockup {
+  --lx: var(--vprs-light-x, 38%);
+  --ly: var(--vprs-light-y, 16%);
+  /* Vector pointing away from the light; every shadow slides along it. */
+  --away-x: calc(50% - var(--lx));
+  --away-y: calc(50% - var(--ly));
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: clamp(1.75rem, 5vw, 3rem) clamp(2rem, 7vw, 4.5rem);
+  border-radius: clamp(20px, 4vw, 34px);
+  /* Sheen oversized so its falloff exits the panel — reads as a convex
+     surface, not a printed oval. */
+  background:
+    radial-gradient(
+      140% 130% at var(--lx) var(--ly),
+      oklch(from var(--vprs-accent) l c h / 0.13) 0%,
+      oklch(from var(--vprs-brand) l c h / 0.055) 38%,
+      rgba(0, 0, 0, 0.16) 100%
+    ),
+    var(--vprs-slab);
+  /* Symmetric ambient occlusion only; the directional shadow is ::before. */
+  box-shadow: 0 0 clamp(24px, 5vw, 44px) oklch(from var(--vprs-ink) l c h / 0.45);
+}
+
+.lockup::before {
+  /* Cast shadow of the raised slab, sliding opposite the light. */
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 5% 3%;
+  border-radius: inherit;
+  background: oklch(from var(--vprs-ink) l c h / 0.55);
+  filter: blur(26px);
+  translate: calc(var(--away-x) * 0.14) calc(var(--away-y) * 0.14 + 10px);
+  pointer-events: none;
+}
+
+.lockup::after {
+  /* 1px rim: bright facing the light, shadowed on the far side. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    130% 110% at var(--lx) var(--ly),
+    oklch(from var(--vprs-accent-soft) calc(l + 0.05) c h / 0.38) 0%,
+    oklch(from var(--vprs-accent) l c h / 0.14) 34%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.logo {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 2; /* the interactive island floats over the recess */
+}
+
+.logo::after {
+  /* Atom's cast shadow: z:-1 inside the atom's stacking context paints it
+     under the atom but OVER the letters. Slides opposite the light. */
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 9%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    oklch(from var(--vprs-ink) l c h / 0.55) 0%,
+    oklch(from var(--vprs-ink) l c h / 0.3) 52%,
+    transparent 78%
+  );
+  translate: calc(var(--away-x) * 0.7) calc(var(--away-y) * 0.7);
+  pointer-events: none;
+}
+
+.wordmark {
+  /* Debossed: occlusion bands hug the light-facing glyph edges, reach
+     computed from the light vars; out-of-order calc stops clamp to zero-width
+     when the light crosses — that IS the flip to the other edge. The 28% stop
+     is font-metric compensation (line-height 1 puts lowercase tops ~28% below
+     the box top). No edge highlights: a bright rim below a glyph reads as
+     outset. */
+  grid-area: 1 / 1;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--vprs-display, Impact, sans-serif);
+  font-size: clamp(4.5rem, 20vw, 10rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  background-image:
+    linear-gradient(
+      180deg,
+      oklch(from var(--vprs-ink) l c h / 0.78) 0%,
+      oklch(from var(--vprs-ink) l c h / 0.66) 28%,
+      oklch(from var(--vprs-ink) l c h / 0.22) calc(28% + (50% - var(--ly)) * 0.4),
+      transparent calc(30% + (50% - var(--ly)) * 0.8)
+    ),
+    linear-gradient(
+      0deg,
+      oklch(from var(--vprs-ink) l c h / 0.78) 0%,
+      oklch(from var(--vprs-ink) l c h / 0.22) calc(2% + (var(--ly) - 50%) * 0.5),
+      transparent calc(4% + (var(--ly) - 50%) * 0.9)
+    ),
+    linear-gradient(
+      90deg,
+      oklch(from var(--vprs-ink) l c h / 0.62) 0%,
+      oklch(from var(--vprs-ink) l c h / 0.2) calc(1.5% + (50% - var(--lx)) * 0.22),
+      transparent calc(3% + (50% - var(--lx)) * 0.4)
+    ),
+    linear-gradient(
+      270deg,
+      oklch(from var(--vprs-ink) l c h / 0.62) 0%,
+      oklch(from var(--vprs-ink) l c h / 0.2) calc(1.5% + (var(--lx) - 50%) * 0.22),
+      transparent calc(3% + (var(--lx) - 50%) * 0.4)
+    ),
+    radial-gradient(
+      75% 190% at var(--lx) var(--ly),
+      oklch(from var(--vprs-brand) 0.66 calc(c * 0.85) h) 0%,
+      oklch(from var(--vprs-brand) 0.53 calc(c * 0.8) h) 35%,
+      oklch(from var(--vprs-brand) 0.38 calc(c * 0.55) h) 70%,
+      oklch(from var(--vprs-brand) 0.27 calc(c * 0.4) h) 100%
+    );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}

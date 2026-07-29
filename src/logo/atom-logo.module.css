@@ -1,0 +1,507 @@
+/**
+ * Fake-3D atom: viewer-fixed light, perspective depth, billboarded electron balls.
+ * Scale with --size on the root `.atom` element.
+ */
+.atom {
+  --size: 72px;
+  --spin-duration: 8s;
+  --arc-stroke: clamp(2px, calc(var(--size) * 0.035), 7px);
+  --arc-span: 56deg;
+  --electron-size: max(calc(var(--size) * 0.1), 4px);
+  --ring-width: calc(var(--size) * 0.075);
+  --nucleus-size: calc(var(--size) * 0.28);
+  --orbit-radius: calc(var(--size) * 0.5);
+  /* Fallbacks keep the mark standalone if src/logo is dropped elsewhere. */
+  --electron: var(--vprs-brand, #6366f1);
+  --nucleus-color: var(--vprs-secondary, #8b5cf6);
+  --glow: var(--vprs-glow, rgba(129, 140, 248, 0.45));
+  --tilt: 0deg;
+  /* Global pointer light (globals.css); fallbacks are the rest pose so marks
+     without the steer island keep the classic look. Shade is DERIVED as the
+     light's complement, so the dark side can never disagree with the lit side. */
+  --light-x: var(--vprs-light-x, 30%);
+  --light-y: var(--vprs-light-y, 24%);
+  --light-dx: var(--vprs-light-dx, -0.59);
+  --light-dy: var(--vprs-light-dy, -0.87);
+  --shade-x: calc(100% - var(--light-x));
+  --shade-y: calc(100% - var(--light-y));
+  --depth-front: 1.22;
+  --depth-back: 0.76;
+  /* Depth dimming is keyframe-phased, not true projected depth: strong
+     values dim balls at wrong screen positions. Keep it subtle. */
+  --depth-front-opacity: 1;
+  --depth-back-opacity: 0.9;
+  --path-direction: normal;
+  --path-duration: 4s;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  /* Near-flat at rest so the classic pose reads true; motion tightens it
+     below so near-side electrons project bigger and read faster. */
+  perspective: calc(var(--size) * 4);
+  perspective-origin: 50% 50%;
+  color: var(--electron);
+  /* The DOM is preserved across client navigation, so a route's --size lands
+     on the SAME element; ease the change instead of jumping. */
+  transition: width 0.35s ease, height 0.35s ease, perspective 0.35s ease;
+}
+
+.scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* Steer tilt toward the cursor; defaults keep non-steered marks static. */
+  transform: rotateX(var(--steer-x, 0deg)) rotateY(var(--steer-y, 0deg));
+  transition: transform 0.25s ease-out;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt));
+}
+
+.nucleus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Every added electron grows the nucleus, keeping the atom neutral. */
+  width: calc(var(--nucleus-size) * (1 + var(--extra, 0) * 0.09));
+  height: calc(var(--nucleus-size) * (1 + var(--extra, 0) * 0.09));
+  border-radius: 50%;
+  /* Clips the light-tracking hotspot (::after) at grazing angles; overflow
+     clips only descendants, so the glow box-shadow survives. */
+  overflow: hidden;
+  /* Trailing rotations billboard the painted light against the steer tilt
+     (.scene), which the nucleus sits directly under. */
+  transform: translate(-50%, -50%) translateZ(calc(var(--size) * -0.08))
+    rotateY(calc(-1 * var(--steer-y, 0deg))) rotateX(calc(-1 * var(--steer-x, 0deg)));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.25s ease-out,
+    width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+    height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: radial-gradient(
+    circle at var(--light-x) var(--light-y),
+    oklch(from var(--nucleus-color) 0.97 calc(c * 0.06) h) 0%,
+    oklch(from var(--nucleus-color) 0.81 calc(c * 0.5) h) 22%,
+    var(--nucleus-color) 58%,
+    oklch(from var(--nucleus-color) 0.42 c h) 88%,
+    oklch(from var(--nucleus-color) 0.31 calc(c * 0.85) h) 100%
+  );
+  /* Cast opposite the light; collapses to zero when head-on. */
+  box-shadow:
+    calc(var(--light-dx) * var(--size) * -0.05) calc(var(--light-dy) * var(--size) * -0.058)
+      calc(var(--size) * 0.1) oklch(from var(--nucleus-color) 0.31 calc(c * 0.85) h / 0.5),
+    0 0 calc(var(--size) * 0.12) var(--glow);
+}
+
+.nucleus::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at var(--shade-x) var(--shade-y),
+    transparent 40%,
+    oklch(from var(--nucleus-color) 0.33 calc(c * 0.8) h / 0.55) 100%
+  );
+}
+
+.nucleus::after {
+  content: "";
+  position: absolute;
+  /* Hotspot rides the light; a fixed hotspot over a moving gradient reads
+     as two lights. */
+  top: calc(var(--light-y) - 9%);
+  left: calc(var(--light-x) - 11%);
+  width: 30%;
+  height: 24%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 72%);
+}
+
+.orbit {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: var(--orbit-transform);
+}
+
+/* Annulus with real radial width: a stroke has zero thickness and reads
+   flat no matter how it is stacked. */
+.ring {
+  position: absolute;
+  /* Half-band outset: the band draws inward from the box edge, so this puts
+     its centerline through the electron centers. */
+  inset: calc(var(--ring-width) / -2);
+  border-radius: 50%;
+  background: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--ring-width) - 1px),
+    color-mix(in srgb, currentColor 12%, transparent) calc(100% - var(--ring-width)),
+    color-mix(in srgb, currentColor 62%, transparent) calc(100% - var(--ring-width) * 0.5),
+    color-mix(in srgb, currentColor 12%, transparent) calc(100% - 1px),
+    transparent 100%
+  );
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+/* Stacked faint outlines along the normal: face-on they coincide, edge-on
+   they sum into a visible wall; discrete rims alone read flat in rotation. */
+.ringBand {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.ringLayer {
+  position: absolute;
+  inset: calc(var(--arc-stroke) / -2);
+  border-radius: 50%;
+  border: var(--arc-stroke) solid color-mix(in srgb, currentColor 18%, transparent);
+  transform: translateZ(calc(var(--layer) * var(--size) * 0.015));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Without a faint track, balls moving mostly toward/away from the viewer
+     look like they stand still. */
+  .atom:not(.hoverToPlay) .ring,
+  .atom:not(.hoverToPlay) .ringBand {
+    opacity: 0.5;
+  }
+
+  .atom:not(.hoverToPlay) {
+    perspective: calc(var(--size) * 1.9);
+  }
+}
+
+.hoverToPlay:hover .ring,
+.hoverToPlay:hover .ringBand,
+:global(a:hover) > .hoverToPlay .ring,
+:global(a:hover) > .hoverToPlay .ringBand {
+  opacity: 0.5;
+}
+
+.hoverToPlay:hover,
+:global(a:hover) > .hoverToPlay {
+  perspective: calc(var(--size) * 1.9);
+}
+
+
+.trace {
+  position: absolute;
+  inset: calc(var(--arc-stroke) / -2);
+  border-radius: 50%;
+  pointer-events: none;
+  /* Forward path: short tail lagging CCW of electron at 12 o'clock. */
+  background: conic-gradient(
+    from calc(-1 * var(--arc-span)),
+    transparent 0deg,
+    transparent calc(var(--arc-span) * 0.38),
+    color-mix(in srgb, currentColor 18%, transparent) calc(var(--arc-span) * 0.58),
+    color-mix(in srgb, currentColor 52%, transparent) calc(var(--arc-span) * 0.78),
+    color-mix(in srgb, currentColor 85%, transparent) calc(var(--arc-span) * 0.92),
+    oklch(from var(--electron) 0.76 calc(c * 0.5) h) calc(var(--arc-span) * 0.97),
+    oklch(from var(--electron) 0.93 calc(c * 0.17) h) var(--arc-span),
+    transparent var(--arc-span),
+    transparent 360deg
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--arc-stroke) - 0.5px),
+    #000 calc(100% - var(--arc-stroke)),
+    #000 calc(100% - 0.5px),
+    transparent 100%
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--arc-stroke) - 0.5px),
+    #000 calc(100% - var(--arc-stroke)),
+    #000 calc(100% - 0.5px),
+    transparent 100%
+  );
+}
+
+/* Second tail for the paired electron, 180° along the same path. */
+.traceOpposite {
+  transform: rotate(180deg);
+}
+
+/* Reverse path: mirrored stops, same length and fade. */
+.traceAlt {
+  background: conic-gradient(
+    from 0deg,
+    oklch(from var(--electron) 0.93 calc(c * 0.17) h) 0deg,
+    oklch(from var(--electron) 0.76 calc(c * 0.5) h) calc(var(--arc-span) * 0.03),
+    color-mix(in srgb, currentColor 85%, transparent) calc(var(--arc-span) * 0.08),
+    color-mix(in srgb, currentColor 52%, transparent) calc(var(--arc-span) * 0.22),
+    color-mix(in srgb, currentColor 18%, transparent) calc(var(--arc-span) * 0.42),
+    transparent calc(var(--arc-span) * 0.62),
+    transparent var(--arc-span),
+    transparent 360deg
+  );
+}
+
+.path {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.electron {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: var(--electron-size);
+  height: var(--electron-size);
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) translateY(calc(-1 * var(--orbit-radius)));
+}
+
+/* Halo as a gradient, not box-shadow: the depth cue's brightness filter
+   rasterizes the ball, and a shadow past its bounds paints a square edge. */
+.electron::before {
+  content: "";
+  position: absolute;
+  inset: -70%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, currentColor 38%, transparent) 0%,
+    transparent 65%
+  );
+}
+
+/* Added electron at an arbitrary path angle; --phase threads its depth-cue
+   offset (angle/360 - 1 keeps the delay negative). */
+.electronSlot {
+  position: absolute;
+  inset: 0;
+  transform: rotate(var(--slot-angle));
+  transform-style: preserve-3d;
+}
+
+.electronSlot .electronBall {
+  animation-delay: calc(var(--phase, 0) * var(--path-duration));
+}
+
+.clickable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Paired electron, 180° along the same path; depth cue runs half a cycle out. */
+.electronOpposite {
+  transform: translate(-50%, -50%) translateY(var(--orbit-radius));
+}
+
+.electronOpposite .electronBall {
+  animation-delay: calc(-0.5 * var(--path-duration));
+}
+
+.counterPath,
+.counterOrbit,
+.counterSpinnerBillboard,
+.counterSteer {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* Fourth billboard cancel: the steer tilt lives on .scene, outside the
+   path/orbit/tumble cancels, so it needs its own inverse. Same transition
+   as .scene keeps the cancel in sync while the tilt eases. */
+.counterSteer {
+  transform: rotateY(calc(-1 * var(--steer-y, 0deg))) rotateX(calc(-1 * var(--steer-x, 0deg)));
+  transition: transform 0.25s ease-out;
+}
+
+.counterOrbit {
+  transform: var(--counter-orbit-transform);
+}
+
+.counterSpinnerBillboard {
+  transform: rotateY(0deg) rotateX(calc(-1 * var(--tilt)));
+}
+
+.electronBall {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* Clips the light-tracking hotspot (::after) at grazing angles. */
+  overflow: hidden;
+  background: radial-gradient(
+    circle at var(--light-x) var(--light-y),
+    #ffffff 0%,
+    oklch(from var(--electron) 0.93 calc(c * 0.17) h) 28%,
+    oklch(from var(--electron) 0.76 calc(c * 0.5) h) 62%,
+    var(--electron) 100%
+  );
+  /* Cast opposite the light; zero when head-on. */
+  box-shadow:
+    calc(var(--light-dx) * var(--electron-size) * -0.17)
+      calc(var(--light-dy) * var(--electron-size) * -0.19)
+      calc(var(--electron-size) * 0.28) oklch(from var(--electron) calc(l - 0.06) c h / 0.45);
+}
+
+.electronBall::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at var(--shade-x) var(--shade-y),
+    transparent 36%,
+    oklch(from var(--electron) calc(l - 0.1) c h / 0.48) 100%
+  );
+}
+
+.electronBall::after {
+  content: "";
+  position: absolute;
+  /* Same tracking hotspot as the nucleus, scaled to the ball. */
+  top: calc(var(--light-y) - 9%);
+  left: calc(var(--light-x) - 11%);
+  width: 30%;
+  height: 24%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 72%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spinner {
+    animation: vprs-spin var(--spin-duration) linear infinite;
+  }
+
+  .orbit .path {
+    animation: vprs-path var(--path-duration) linear infinite;
+    animation-direction: var(--path-direction);
+  }
+
+  .orbit .counterPath {
+    animation: vprs-counter-path var(--path-duration) linear infinite;
+    animation-direction: var(--path-direction);
+  }
+
+  .orbit .electronBall {
+    animation-name: vprs-depth;
+    animation-duration: var(--path-duration);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-direction: var(--path-direction);
+  }
+
+  .spinner .counterSpinnerBillboard {
+    animation: vprs-counter-spin var(--spin-duration) linear infinite;
+  }
+}
+
+/* No animation = base transforms = the classic rest pose; hover starts
+   motion from it. */
+.hoverToPlay .spinner,
+.hoverToPlay .path,
+.hoverToPlay .counterPath,
+.hoverToPlay .electronBall,
+.hoverToPlay .counterSpinnerBillboard {
+  animation-name: none;
+}
+
+.hoverToPlay:hover .spinner,
+:global(a:hover) > .hoverToPlay .spinner {
+  animation-name: vprs-spin;
+}
+
+.hoverToPlay:hover .path,
+:global(a:hover) > .hoverToPlay .path {
+  animation-name: vprs-path;
+}
+
+.hoverToPlay:hover .counterPath,
+:global(a:hover) > .hoverToPlay .counterPath {
+  animation-name: vprs-counter-path;
+}
+
+.hoverToPlay:hover .electronBall,
+:global(a:hover) > .hoverToPlay .electronBall {
+  animation-name: vprs-depth;
+}
+
+.hoverToPlay:hover .counterSpinnerBillboard,
+:global(a:hover) > .hoverToPlay .counterSpinnerBillboard {
+  animation-name: vprs-counter-spin;
+}
+
+/* Tumble: a full turn about BOTH axes per cycle (ends at identity, so the
+   loop repeats cleanly). The counter-spin below is the exact inverse
+   (reverse order, negated) so billboarded balls keep facing the viewer. */
+@keyframes vprs-spin {
+  from {
+    transform: rotateX(calc(var(--tilt) + 0deg)) rotateY(0deg);
+  }
+
+  to {
+    transform: rotateX(calc(var(--tilt) + 360deg)) rotateY(360deg);
+  }
+}
+
+@keyframes vprs-path {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+@keyframes vprs-counter-path {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(-360deg);
+  }
+}
+
+@keyframes vprs-counter-spin {
+  from {
+    transform: rotateY(0deg) rotateX(calc(-1 * var(--tilt) - 0deg));
+  }
+
+  to {
+    transform: rotateY(-360deg) rotateX(calc(-1 * var(--tilt) - 360deg));
+  }
+}
+
+/* Depth cues: brightness/opacity only so the ball stays on the ring stroke.
+   Phase matches the tipped rings: path 0 starts at the ring's far top. */
+@keyframes vprs-depth {
+  0%,
+  100% {
+    opacity: var(--depth-back-opacity);
+    filter: brightness(0.8);
+  }
+
+  25%,
+  75% {
+    opacity: 0.88;
+    filter: brightness(0.95);
+  }
+
+  50% {
+    opacity: var(--depth-front-opacity);
+    filter: brightness(1.1);
+  }
+}

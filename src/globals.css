@@ -1,0 +1,106 @@
+/* Oxanium (OFL), self-hosted from public/fonts so the starter stays CDN-free. */
+@font-face {
+  font-family: "Oxanium";
+  src: url(/fonts/oxanium-latin.woff2) format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+/* Every color derives from --vprs-brand; change it and the theme follows.
+   public/favicon.svg is static; recolor it by hand. */
+:root {
+  --vprs-brand: #fd00d3;
+
+  --vprs-display: "Oxanium", Impact, sans-serif;
+  --vprs-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+
+  --vprs-accent: oklch(from var(--vprs-brand) calc(l + 0.09) calc(c - 0.03) h);
+  --vprs-accent-soft: oklch(from var(--vprs-brand) calc(l + 0.19) calc(c - 0.1) h);
+  --vprs-secondary: oklch(from var(--vprs-brand) l calc(c + 0.02) calc(h + 18));
+  --vprs-secondary-soft: oklch(from var(--vprs-secondary) calc(l + 0.11) calc(c - 0.07) h);
+  --vprs-glow: oklch(from var(--vprs-accent) l c h / 0.45);
+
+  --vprs-text: oklch(from var(--vprs-brand) 0.97 0.006 calc(h - 25));
+  --vprs-muted: oklch(from var(--vprs-brand) 0.71 0.03 calc(h - 20));
+
+  --vprs-bg: oklch(from var(--vprs-brand) 0.13 0.018 h);
+  --vprs-slab: oklch(from var(--vprs-brand) 0.18 0.03 h);
+  --vprs-ink: oklch(from var(--vprs-brand) 0.05 0.015 h);
+}
+
+/* ONE global point light: atom-logo-steer.client.tsx writes these vars on
+   <html>; everything lit reads them. -x/-y = where the light lands on a
+   viewer-facing sphere (pre-clamped by the island so shading never flips);
+   -dx/-dy = unitless toward-vector, shadows cast along the negation;
+   -ang = the same direction for conic-gradient consumers.
+   Initial values ARE the rest pose: they must match the island's rest values
+   and the var() fallbacks in atom-logo.module.css, or no-JS/touch renders a
+   different light. The :root transition makes every retarget glide. */
+@property --vprs-light-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 30%;
+}
+
+@property --vprs-light-y {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 24%;
+}
+
+@property --vprs-light-dx {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: -0.59;
+}
+
+@property --vprs-light-dy {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: -0.87;
+}
+
+@property --vprs-light-ang {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: -34deg;
+}
+
+@property --vprs-pointer-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 50%;
+}
+
+@property --vprs-pointer-y {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 35%;
+}
+
+:root {
+  transition:
+    --vprs-light-x 0.25s ease-out,
+    --vprs-light-y 0.25s ease-out,
+    --vprs-light-dx 0.25s ease-out,
+    --vprs-light-dy 0.25s ease-out,
+    --vprs-light-ang 0.25s ease-out,
+    --vprs-pointer-x 0.25s ease-out,
+    --vprs-pointer-y 0.25s ease-out;
+}
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* Flat: the pointer light must stay the page's only light source. */
+  background: var(--vprs-bg);
+  color: var(--vprs-text);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
