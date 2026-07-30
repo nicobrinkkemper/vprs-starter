@@ -94,6 +94,8 @@
   grid-area: 1 / 1;
   z-index: 1;
   margin: 0;
+  -webkit-user-select: none;
+  user-select: none;
   font-family: var(--vprs-display, Impact, sans-serif);
   font-size: clamp(4.5rem, 20vw, 10rem);
   font-weight: 800;

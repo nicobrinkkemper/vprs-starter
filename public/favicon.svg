@@ -17,11 +17,13 @@
     <ellipse cx="16" cy="16" rx="13.5" ry="5.2" transform="rotate(60 16 16)"/>
     <ellipse cx="16" cy="16" rx="13.5" ry="5.2" transform="rotate(120 16 16)"/>
   </g>
+  <!-- Electron ring hugs the nucleus, tilted: bottom-left near (bigger,
+       in front), top-right far (smaller, behind the nucleus). -->
+  <circle cx="20.1" cy="11.9" r="1.4" fill="url(#e)" opacity="0.85"/>
+  <circle cx="13.3" cy="9.2" r="1.65" fill="url(#e)" opacity="0.9"/>
+  <circle cx="22.9" cy="18.7" r="1.65" fill="url(#e)" opacity="0.9"/>
   <circle cx="16" cy="16" r="5.2" fill="url(#n)"/>
-  <circle cx="3.3" cy="14.2" r="1.9" fill="url(#e)"/>
-  <circle cx="28.7" cy="17.8" r="1.9" fill="url(#e)"/>
-  <circle cx="24.1" cy="23.3" r="1.9" fill="url(#e)"/>
-  <circle cx="7.9" cy="8.7" r="1.9" fill="url(#e)"/>
-  <circle cx="8.7" cy="19.6" r="1.9" fill="url(#e)"/>
-  <circle cx="23.3" cy="12.4" r="1.9" fill="url(#e)"/>
+  <circle cx="18.7" cy="22.9" r="2.15" fill="url(#e)"/>
+  <circle cx="9.2" cy="13.3" r="2.15" fill="url(#e)"/>
+  <circle cx="11.9" cy="20.1" r="2.4" fill="url(#e)"/>
 </svg>
