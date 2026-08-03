@@ -1,5 +1,6 @@
 import { readdirSync } from "node:fs";
 import { defineConfig, PluginOption } from "vite";
+import react from "@vitejs/plugin-react";
 import { StreamPluginOptions, vitePluginReactServer } from "vite-plugin-react-server";
 
 // Every markdown file in src/content is a prerendered guide page.
@@ -9,6 +10,7 @@ const guides = readdirSync(new URL("./src/content", import.meta.url))
 
 export default defineConfig({
   plugins: [
+    react(),
     vitePluginReactServer({
       moduleBase: "src",
       routes: {
