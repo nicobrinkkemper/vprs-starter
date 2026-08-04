@@ -31,12 +31,17 @@ export default async function render(req: IncomingMessage, res: ServerResponse) 
     const proto = (req.headers["x-forwarded-proto"] as string) ?? "https";
     const origin = `${proto}://${host}`;
 
-    // GET-only today; a POST action through here must also forward the body.
+    // Forward the body so POSTed server actions survive the Node→Web bridge;
+    // `duplex` is mandatory whenever a Request gets a stream body.
+    const hasBody = req.method !== "GET" && req.method !== "HEAD";
     const response: Response = await handler(
       new Request(routeUrl(req, origin), {
         method: req.method,
         headers: toWebHeaders(req),
-      }),
+        ...(hasBody
+          ? { body: Readable.toWeb(req) as ReadableStream, duplex: "half" }
+          : {}),
+      } as RequestInit),
     );
 
     res.statusCode = response.status;
