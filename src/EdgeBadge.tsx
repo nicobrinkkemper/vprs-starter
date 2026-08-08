@@ -1,4 +1,6 @@
 import styles from "./styles.module.css";
+import { EdgePing } from "./EdgePing.client.js";
+import { pingEdge } from "./edgePing.js";
 
 export type EdgeInfo = {
   region: string | null;
@@ -19,7 +21,7 @@ export function EdgeBadge({ edge }: { edge: EdgeInfo }) {
     <span className={styles.edge} data-state="live">
       rendered at the edge
       {edge.region ? ` - ${edge.region}` : ""}
-      {place ? ` - near ${place}` : ""}
+      {place ? ` - near ${place}` : ""} <EdgePing ping={pingEdge} />
     </span>
   );
 }
