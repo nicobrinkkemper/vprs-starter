@@ -18,6 +18,7 @@ export default defineConfig({
         staticPaths: { "/docs/$slug": () => guides },
       },
       transport: "webpack",
+      build: { inlineFlight: "stream" },
     } satisfies StreamPluginOptions) as PluginOption,
   ],
 });
