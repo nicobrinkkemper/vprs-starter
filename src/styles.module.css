@@ -71,6 +71,25 @@
   transition: background 120ms ease;
 }
 
+/* The button label never changes; the response lands in a pre-sized slot. */
+.pong {
+  display: inline-grid;
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pongSizer,
+.pongAt {
+  grid-area: 1 / 1;
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.pongSizer {
+  visibility: hidden;
+}
+
 .ping:hover {
   background: oklch(from var(--vprs-accent) l c h / 0.22);
 }
