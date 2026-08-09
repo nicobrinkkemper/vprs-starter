@@ -31,16 +31,31 @@ export default async function render(req: IncomingMessage, res: ServerResponse) 
     const proto = (req.headers["x-forwarded-proto"] as string) ?? "https";
     const origin = `${proto}://${host}`;
 
-    // Forward the body so POSTed server actions survive the Node→Web bridge;
-    // `duplex` is mandatory whenever a Request gets a stream body.
+    // Forward the body so POSTed server actions survive the Node→Web bridge.
+    // BUFFERED, not streamed: Vercel's Node runtime pre-reads the request
+    // body (req.body), leaving the raw stream drained — a piped stream then
+    // never ends and the action decode hangs with zero response bytes. Read
+    // whatever the stream still yields, fall back to the platform's parsed
+    // body when it yielded nothing.
     const hasBody = req.method !== "GET" && req.method !== "HEAD";
+    let body: BodyInit | undefined;
+    if (hasBody) {
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) chunks.push(chunk as Buffer);
+      if (chunks.length > 0) {
+        body = new Uint8Array(Buffer.concat(chunks));
+      } else {
+        const parsed = (req as IncomingMessage & { body?: unknown }).body;
+        if (typeof parsed === "string") body = parsed;
+        else if (Buffer.isBuffer(parsed)) body = new Uint8Array(parsed);
+        else if (parsed != null) body = JSON.stringify(parsed);
+      }
+    }
     const response: Response = await handler(
       new Request(routeUrl(req, origin), {
         method: req.method,
         headers: toWebHeaders(req),
-        ...(hasBody
-          ? { body: Readable.toWeb(req) as ReadableStream, duplex: "half" }
-          : {}),
+        ...(body !== undefined ? { body } : {}),
       } as RequestInit),
     );
 
