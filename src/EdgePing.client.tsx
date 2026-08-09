@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import styles from "./styles.module.css";
 
 export function EdgePing({ ping }: { ping: () => Promise<{ at: string }> }) {
   const [at, setAt] = useState<string | null>(null);
@@ -7,6 +8,8 @@ export function EdgePing({ ping }: { ping: () => Promise<{ at: string }> }) {
   return (
     <button
       type="button"
+      className={styles.ping}
+      disabled={pending}
       data-testid="edge-ping"
       onClick={() =>
         startTransition(async () => {
