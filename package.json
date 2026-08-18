@@ -12,9 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^0.0.0-experimental-7dfc7ccd-20260803",
-    "react-dom": "^0.0.0-experimental-7dfc7ccd-20260803",
-    "react-server-loader": "^0.0.0-experimental-7dfc7ccd-20260803"
+    "react": "0.0.0-experimental-eb8feb71-20260814",
+    "react-dom": "0.0.0-experimental-eb8feb71-20260814",
+    "react-server-loader": "0.0.0-experimental-eb8feb71-20260814"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
@@ -23,12 +23,17 @@
     "@vitejs/plugin-react": "^6.0.5",
     "typescript": "^5.7.3",
     "vite": "^8.1.4",
-    "vite-plugin-react-server": "^3.11.0"
+    "vite-plugin-react-server": "^3.11.1"
   },
   "description": "Minimal vite-plugin-react-server starter: file-based routes, one-call client entry, and per-request server rendering on Vercel",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nicobrinkkemper/vprs-starter.git"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom",
+    "react-server-loader": "$react-server-loader"
   }
 }
