@@ -12,6 +12,9 @@ export default defineConfig({
   plugins: [
     react(),
     vitePluginReactServer({
+      // Every script here runs without --conditions react-server, so the
+      // worker owns react-server resolution. Required from vprs 4.0.
+      runner: "isolated",
       moduleBase: "src",
       routes: {
         dir: "routes",
