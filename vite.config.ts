@@ -21,9 +21,7 @@ export default defineConfig({
         staticPaths: { "/docs/$slug": () => guides },
       },
       transport: "webpack",
-      // "stream" currently hydrates static-hosted subroutes to a blank page
-      // (upstream vprs bug); switch back once fixed.
-      build: { inlineFlight: "blob" },
+      build: { inlineFlight: "stream" },
     } satisfies StreamPluginOptions) as PluginOption,
   ],
 });
