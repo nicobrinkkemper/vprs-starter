@@ -12,9 +12,10 @@ export default defineConfig({
   plugins: [
     react(),
     vitePluginReactServer({
-      // Every script here runs without --conditions react-server, so the
-      // worker owns react-server resolution. Required from vprs 4.0.
-      runner: "isolated",
+      // The baked pair is the serving artifact (vprs 4.1): a failed bake
+      // fails the build, and the snapshots render through the pair. Dev
+      // still runs the isolated worker shape; no --conditions anywhere.
+      runner: "edge",
       moduleBase: "src",
       routes: {
         dir: "routes",
