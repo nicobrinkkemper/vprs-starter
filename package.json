@@ -9,7 +9,8 @@
     "preview": "vite preview --outDir dist/static",
     "build:vercel": "npm run build && node scripts/prepare-vercel.mjs",
     "edge": "npm run build:vercel && node edge-server.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build:vercel && playwright test"
   },
   "dependencies": {
     "react": "0.0.0-experimental-eb8feb71-20260814",
@@ -17,6 +18,7 @@
     "react-server-loader": "0.0.0-experimental-eb8feb71-20260814"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.20.1",
     "@types/react": "^19.0.9",
     "@types/react-dom": "^19.0.3",

@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["node", "vite/client", "vite-plugin-react-server/virtual"]
   },
-  "include": ["src", "api", "vite.config.ts"]
+  "include": ["src", "api", "test", "vite.config.ts", "playwright.config.ts"]
 }

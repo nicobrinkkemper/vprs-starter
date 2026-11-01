@@ -4,3 +4,5 @@ dist
 *.local
 .env*
 .tmp-vprs/
+playwright-report
+test-results

@@ -26,8 +26,10 @@ const withEdgeGeo = (request) => {
   return app(new Request(request, { headers }));
 };
 
-createServer(toNodeListener(withEdgeGeo)).listen(4401, () => {
+const port = Number(process.env.PORT ?? 4401);
+
+createServer(toNodeListener(withEdgeGeo)).listen(port, () => {
   console.log(
-    "vprs-starter, rendering each route per request → http://localhost:4401"
+    `vprs-starter, rendering each route per request → http://localhost:${port}`
   );
 });
